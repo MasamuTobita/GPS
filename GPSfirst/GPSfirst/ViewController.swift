@@ -9,25 +9,40 @@
 import UIKit
 import CoreLocation
 
-class ViewController: UIViewController {
+class ViewController: UIViewController , CLLocationManagerDelegate {
     
     var locationManager: CLLocationManager!
+    var label: UILabel!
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        setupLocationManager()
-    }
-    
-    func setupLocationManager() {
+        
+        view.backgroundColor = .white
+        
+        // 緯度、経度表示用のラベル
+        label = UILabel()
+        label.frame.size = CGSize(width: 200, height: 120)
+        label.center = view.center
+        label.numberOfLines = 0
+        view.addSubview(label)
+        
         locationManager = CLLocationManager()
-        guard let locationManager = locationManager else { return }
-        
         locationManager.requestWhenInUseAuthorization()
-        
         let status = CLLocationManager.authorizationStatus()
-        if status == .authorizedWhenInUse {
+        switch status {
+        case .restricted, .denied:
+            print("拒否されている")
+            break
+        case .notDetermined:
+            locationManager.delegate = self
             locationManager.distanceFilter = 10
             locationManager.startUpdatingLocation()
+        case .authorizedWhenInUse, .authorizedAlways:
+            locationManager.delegate = self
+            locationManager.distanceFilter = 10
+            locationManager?.startUpdatingLocation()
+        default:
+            break
         }
     }
     
@@ -37,5 +52,6 @@ class ViewController: UIViewController {
         let longitude = location?.coordinate.longitude
         
         print("latitude: \(latitude!)\nlongitude: \(longitude!)")
+        label.text = "latitude: \(latitude!)\nlongitude: \(longitude!)"
     }
 }
